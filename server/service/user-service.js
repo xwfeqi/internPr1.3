@@ -8,21 +8,22 @@ const ApiError = require('../exceptions/api-error');
 
 class UserService {
     async registration(email, password) {
-        const candidate = await UserModel.findOne({email})
+        const candidate = await UserModel.findOne({ email });
         if (candidate) {
-            throw ApiError.BadRequest(`User with email ${email} already exist`)
+            throw ApiError.BadRequest(`User with this email ${email} already exist`);
         }
         const hashPassword = await bcrypt.hash(password, 3);
-        const activationLink = uuid.v4(); 
+        const activationLink = uuid.v4();
 
-        const user = await UserModel.create({email, password: hashPassword, activationLink})
+        const user = await UserModel.create({ email, password: hashPassword, activationLink });
+        console.log(`User created: ${user._id}`);
         await mailService.sendActivationMail(email, `${process.env.API_URL}/api/activate/${activationLink}`);
 
-        const userDto = new UserDto(user); 
-        const tokens = tokenService.generateTokens({...userDto});
+        const userDto = new UserDto(user);
+        const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-        return {...tokens, user: userDto}
+        return { ...tokens, user: userDto };
     }
 
     async activate(activationLink) {
@@ -57,20 +58,38 @@ class UserService {
 
     async refresh(refreshToken) {
         if (!refreshToken) {
+            console.log('No refresh token provided');
             throw ApiError.UnauthorizedError();
         }
         const userData = tokenService.validateRefreshToken(refreshToken);
-        const tokenFromDb = await tokenService.findToken(refreshToken);
-        if (!userData || !tokenFromDb) {
+        if (!userData) {
+            console.log('Invalid refresh token');
             throw ApiError.UnauthorizedError();
         }
+        console.log('Validated user data:', userData);
+    
+        const tokenFromDb = await tokenService.findToken(refreshToken);
+        if (!tokenFromDb) {
+            console.log('Token not found in database');
+            throw ApiError.UnauthorizedError();
+        }
+        console.log('Token found in database:', tokenFromDb);
+    
         const user = await UserModel.findById(userData.id);
+        if (!user) {
+            console.log('User not found');
+            throw ApiError.UnauthorizedError();
+        }
+        console.log('User found:', user);
+    
         const userDto = new UserDto(user);
-        const tokens = tokenService.generateTokens({...userDto});
-
+        const tokens = tokenService.generateTokens({ ...userDto });
+    
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        return {...tokens, user: userDto}
+        return { ...tokens, user: userDto };
     }
+    
+    
 
     async getAllUsers() {
         const users = await UserModel.find();
