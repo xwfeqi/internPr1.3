@@ -1,38 +1,35 @@
-import React, { useContext, useState } from 'react';
+import React, { FC, useState, useContext } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Context } from '../index';
-import { TextField, Button, Container, Typography, Box } from '@mui/material';
+import { TextField, Button, Container, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-const LoginForm = () => {
+const RegisterForm: FC = () => {
     const { store } = useContext(Context);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [name, setName] = useState<string>('');
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
-        try {
-            await store.login(email, password);
-            if (store.isActivated) {
-                navigate('/profile');
-            } else {
-                navigate('/activation');
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const handleRegister = () => {
-        navigate('/register');
+    const handleRegister = async () => {
+        await store.register(name, email, password);
+        navigate('/activation');
     };
 
     return (
         <Container maxWidth="sm">
             <Box mt={5}>
                 <Typography variant="h4" gutterBottom>
-                    Login
+                    Register
                 </Typography>
+                <TextField
+                    label="Name"
+                    variant="outlined"
+                    fullWidth
+                    margin="normal"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
                 <TextField
                     label="Email"
                     variant="outlined"
@@ -54,14 +51,6 @@ const LoginForm = () => {
                     variant="contained"
                     color="primary"
                     fullWidth
-                    onClick={handleLogin}
-                >
-                    Login
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
                     onClick={handleRegister}
                 >
                     Register
@@ -71,4 +60,4 @@ const LoginForm = () => {
     );
 };
 
-export default observer(LoginForm);
+export default observer(RegisterForm);

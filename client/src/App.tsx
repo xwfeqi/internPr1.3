@@ -1,52 +1,45 @@
-import React, {FC, useContext, useEffect, useState} from 'react';
+import React, { FC, useContext, useEffect } from 'react';
 import LoginForm from "./components/LoginForm";
-import {Context} from "./index";
-import {observer} from "mobx-react-lite";
-import {IUser} from "./models/IUser";
-import UserService from "./services/UserService";
+import ProfilePage from "./components/ProfilePage";
+import ActivationPage from "./components/ActivationPage";
+import { Context } from "./index";
+import { observer } from "mobx-react-lite";
+import { useNavigate } from "react-router-dom";
 
 const App: FC = () => {
-    const {store} = useContext(Context);
-    const [users, setUsers] = useState<IUser[]>([]);
+    const { store } = useContext(Context);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (localStorage.getItem('token')) {
-            store.checkAuth()
+            store.checkAuth();
         }
-    }, [])
+    }, [store]);
 
-    async function getUsers() {
-        try {
-            const response = await UserService.fetchUsers();
-            setUsers(response.data);
-        } catch (e) {
-            console.log(e);
+    useEffect(() => {
+        if (store.isAuth) {
+            if (store.user.isActivated) {
+                navigate('/profile');
+            } else {
+                navigate('/activation');
+            }
+        } else {
+            navigate('/login');
         }
-    }
+    }, [store.isAuth, store.user.isActivated, navigate]);
 
     if (store.isLoading) {
-        return <div>Loading...</div>
-    }
-
-    if (!store.isAuth) {
-        return (
-            <div>
-                <LoginForm/>
-                <button onClick={getUsers}>Get users</button>
-            </div>
-        );
+        return <div>Loading...</div>;
     }
 
     return (
         <div>
-            <h1>{store.isAuth ? `User authorized ${store.user.email}` : 'AUTHORIZE'}</h1>
-            <h1>{store.user.isActivated ? 'Account has been activated by email' : 'Activate your account!!!!'}</h1>
-            <button onClick={() => store.logout()}>Log out</button>
-            <div>
-                <button onClick={getUsers}>Get users</button>
-            </div>
-            {users.map(user =>
-                <div key={user.email}>{user.email}</div>
+            {store.isAuth && store.user.isActivated ? (
+                <ProfilePage user={store.user} onLogout={store.logout} />
+            ) : store.isAuth && !store.user.isActivated ? (
+                <ActivationPage />
+            ) : (
+                <LoginForm />
             )}
         </div>
     );
