@@ -1,6 +1,8 @@
 export interface IUser {
+    id: string;
     name: string;
     email: string;
     isActivated: boolean;
-    id: string;
+    registeredDate: string; // Додано
+    studyDate: string; // Додано
 }

@@ -1,74 +1,75 @@
-import React, { useContext, useState } from 'react';
-import { observer } from 'mobx-react-lite';
-import { Context } from '../index';
-import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
+import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
 
-const LoginForm = () => {
-    const { store } = useContext(Context);
+const LoginForm: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const store = useUser();
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         try {
             await store.login(email, password);
-            if (store.isActivated) {
+            if (store.user?.isActivated) {
                 navigate('/profile');
             } else {
-                navigate('/activation');
+                navigate('/activation-page');
             }
         } catch (error) {
-            console.error(error);
+            if (error instanceof Error) {
+                setErrorMessage(error.message);
+            } else {
+                setErrorMessage('An unknown error occurred');
+            }
         }
     };
 
-    const handleRegister = () => {
-        navigate('/register');
-    };
-
     return (
-        <Container maxWidth="sm">
-            <Box mt={5}>
-                <Typography variant="h4" gutterBottom>
-                    Login
-                </Typography>
-                <TextField
-                    label="Email"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <TextField
-                    label="Password"
-                    type="password"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    onClick={handleLogin}
-                >
-                    Login
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    onClick={handleRegister}
-                >
-                    Register
-                </Button>
-            </Box>
+        <Container className="d-flex align-items-center justify-content-center min-vh-100">
+            <Row className="w-100 justify-content-center">
+                <Col md="6" lg="4">
+                    <Card className="p-4">
+                        <h2 className="text-center">Login</h2>
+                        {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+                        <Form onSubmit={handleSubmit}>
+                            <Form.Group controlId="formEmail">
+                                <Form.Label>Email address</Form.Label>
+                                <Form.Control
+                                    type="email"
+                                    name="email"
+                                    placeholder="Enter email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </Form.Group>
+                            <Form.Group controlId="formPassword">
+                                <Form.Label>Password</Form.Label>
+                                <Form.Control
+                                    type="password"
+                                    name="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </Form.Group>
+                            <Button variant="primary" type="submit" className="w-100 mt-3">
+                                Login
+                            </Button>
+                        </Form>
+                        <p className="text-center mt-3">
+                            Don't have an account? <Link to="/register">Register</Link>
+                        </p>
+                    </Card>
+                </Col>
+            </Row>
         </Container>
     );
 };
 
-export default observer(LoginForm);
+export default LoginForm;

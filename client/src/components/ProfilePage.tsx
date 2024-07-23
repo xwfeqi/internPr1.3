@@ -1,86 +1,31 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Container, Avatar, Grid, Paper, Button } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { Theme } from '@mui/material/styles';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import { IUser } from '../models/IUser';
-import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 
-const useStyles = makeStyles((theme: Theme | any) => ({
-  appBar: {
-    marginBottom: theme.spacing(4),
-  },
-  avatar: {
-    width: theme.spacing(12),
-    height: theme.spacing(12),
-    margin: 'auto',
-  },
-  paper: {
-    padding: theme.spacing(3),
-    textAlign: 'center',
-  },
-  button: {
-    marginTop: theme.spacing(2),
-  },
-}));
+const ProfilePage: React.FC = () => {
+    const store = useUser();
 
-interface ProfilePageProps {
-  user: IUser;
-  onLogout: () => void;
-}
+    if (!store.user) {
+        return <div>Loading...</div>;
+    }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
-  const classes = useStyles();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await onLogout();
-    navigate('/');
-  };
-
-  return (
-    <>
-      <AppBar position="static" className={classes.appBar}>
-        <Toolbar>
-          <Typography variant="h6" style={{ flexGrow: 1 }}>
-            Welcome, {user.name}
-          </Typography>
-          <Button color="inherit" startIcon={<ExitToAppIcon />} onClick={handleLogout}>
-            Logout
-          </Button>
-        </Toolbar>
-      </AppBar>
-      <Container>
-        <Grid container spacing={4} justifyContent="center">
-          <Grid item xs={12} sm={6} md={4}>
-            <Paper className={classes.paper}>
-              <Avatar className={classes.avatar}>
-                <AccountCircleIcon style={{ fontSize: 60 }} />
-              </Avatar>
-              <Typography variant="h5" gutterBottom>
-                {user.name}
-              </Typography>
-              <Typography variant="body1" color="textSecondary">
-                {user.email}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {user.isActivated ? 'Account has been activated by email' : 'Activate your account!!!!'}
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={() => alert('Edit Profile clicked')}
-              >
-                Edit Profile
-              </Button>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
-    </>
-  );
+    return (
+        <Container className="d-flex align-items-center justify-content-center min-vh-100">
+            <Row className="w-100 justify-content-center">
+                <Col md="8" lg="6">
+                    <Card className="p-4">
+                        <h2 className="text-center">Profile</h2>
+                        <Card.Body>
+                            <Card.Text><strong>Name:</strong> {store.user.name}</Card.Text>
+                            <Card.Text><strong>Email:</strong> {store.user.email}</Card.Text>
+                            <Card.Text><strong>Registered Date:</strong> {new Date(store.user.registeredDate).toLocaleDateString()}</Card.Text>
+                            <Card.Text><strong>Study Date:</strong> {new Date(store.user.studyDate).toLocaleDateString()}</Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+        </Container>
+    );
 };
 
 export default ProfilePage;

@@ -1,6 +1,7 @@
 import { IUser } from "../models/IUser";
 import { makeAutoObservable } from "mobx";
 import AuthService from "../services/AuthService";
+import UserService from "../services/UserService";
 import axios from 'axios';
 import { AuthResponse } from "../models/response/AuthResponse";
 import { API_URL } from "../http";
@@ -30,16 +31,15 @@ export default class Store {
 
     async login(email: string, password: string) {
         try {
-            const response = await AuthService.login(email, password);
-            console.log(response);
+            const response = await UserService.login(email, password);
             localStorage.setItem('token', response.data.accessToken);
             this.setAuth(true);
             this.setUser(response.data.user);
-        } catch (e) {
-            if (e instanceof Error) {
-                console.log((e as any).response?.data?.message);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
             } else {
-                console.log("An unknown error occurred");
+                throw new Error('An unknown error occurred');
             }
         }
     }
@@ -47,30 +47,29 @@ export default class Store {
     async register(name: string, email: string, password: string) {
         try {
             const response = await AuthService.registration(name, email, password);
-            console.log(response);
             localStorage.setItem('token', response.data.accessToken);
             this.setAuth(true);
             this.setUser(response.data.user);
-        } catch (e) {
-            if (e instanceof Error) {
-                console.log((e as any).response?.data?.message);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
             } else {
-                console.log("An unknown error occurred");
+                throw new Error('An unknown error occurred');
             }
         }
     }
 
     async logout() {
         try {
-            const response = await AuthService.logout();
+            await AuthService.logout();
             localStorage.removeItem('token');
             this.setAuth(false);
             this.setUser({} as IUser);
-        } catch (e) {
-            if (e instanceof Error) {
-                console.log((e as any).response?.data?.message);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(error.message);
             } else {
-                console.log("An unknown error occurred");
+                throw new Error('An unknown error occurred');
             }
         }
     }
@@ -79,15 +78,14 @@ export default class Store {
         this.setLoading(true);
         try {
             const response = await axios.get<AuthResponse>(`${API_URL}/refresh`, { withCredentials: true });
-            console.log(response);
             localStorage.setItem('token', response.data.accessToken);
             this.setAuth(true);
             this.setUser(response.data.user);
-        } catch (e) {
-            if (e instanceof Error) {
-                console.log((e as any).response?.data?.message);
+        } catch (error) {
+            if (error instanceof Error) {
+                console.log(error.message);
             } else {
-                console.log("An unknown error occurred");
+                console.log('An unknown error occurred');
             }
         } finally {
             this.setLoading(false);

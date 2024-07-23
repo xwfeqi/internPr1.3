@@ -1,0 +1,30 @@
+body {
+    background-color: #f8f9fa;
+}
+
+
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.form-control {
+    border-radius: 5px;
+}
+
+.btn {
+    border-radius: 5px;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+p {
+    margin-top: 20px;
+}
+
+.text-center {
+    text-align: center;
+}

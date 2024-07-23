@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 const uuid = require('uuid');
 const mailService = require('./mail-service');
 const tokenService = require('./token-service');
-const UserDto = require('../dtos/user-dto');
 const ApiError = require('../exceptions/api-error');
+const UserDto = require('../dtos/user-dto');
 
 class UserService {
     async registration(name, email, password) {
@@ -16,12 +16,19 @@ class UserService {
         const activationLink = uuid.v4();
         const user = await User.create({ name, email, password: hashPassword, activationLink });
         await mailService.sendActivationMail(email, `${process.env.API_URL}/api/activate/${activationLink}`);
-
-        const userDto = new UserDto(user); // id, email, name, isActivated
+        const userDto = new UserDto(user); 
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
-
         return { ...tokens, user: userDto };
+    }
+
+    async activate(activationLink) {
+        const user = await User.findOne({ activationLink });
+        if (!user) {
+            throw ApiError.BadRequest('Incorrect activation link');
+        }
+        user.isActivated = true;
+        await user.save();
     }
 
     async login(email, password) {
@@ -37,15 +44,6 @@ class UserService {
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
         return { ...tokens, user: userDto };
-    }
-
-    async activate(activationLink) {
-        const user = await User.findOne({ activationLink });
-        if (!user) {
-            throw ApiError.BadRequest('Incorrect activation link');
-        }
-        user.isActivated = true;
-        await user.save();
     }
 
     async logout(refreshToken) {
@@ -73,6 +71,15 @@ class UserService {
         const users = await User.find();
         return users;
     }
+
+    async getUserById(userId) {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw ApiError.BadRequest('User not found');
+        }
+        return new UserDto(user);
+    }
 }
+
 
 module.exports = new UserService();
