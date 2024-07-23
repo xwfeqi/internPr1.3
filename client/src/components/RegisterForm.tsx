@@ -17,7 +17,7 @@ const RegisterForm: React.FC = () => {
         e.preventDefault();
         try {
             await store.register(formData.name, formData.email, formData.password);
-            navigate('/activation-page');
+            navigate('/activation-page', { state: { newUser: true } });
         } catch (error) {
             if (error instanceof Error) {
                 setErrorMessage(error.message);
