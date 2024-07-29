@@ -17,53 +17,48 @@ passport.use(
     },
     async function (accessToken, refreshToken, profile, cb) {
       try {
-        console.log('Facebook profile received:', profile);
-        
         let user = await User.findOne({ accountId: profile.id, provider: 'facebook' });
-        
+
         if (!user) {
           let email = profile.emails ? profile.emails[0].value : `${profile.id}@facebook.com`;
-          
-          // Перевірка чи вже існує користувач з такою ж електронною поштою
+
           const existingUser = await User.findOne({ email: email });
           if (existingUser) {
-            // Оновлення існуючого користувача для додавання accountId та provider
             existingUser.accountId = profile.id;
             existingUser.provider = 'facebook';
             await existingUser.save();
-            console.log('Existing user updated:', existingUser);
-            return cb(null, existingUser);
+            const tokens = tokenService.generateTokens({ id: existingUser._id, email: existingUser.email });
+            await tokenService.saveToken(existingUser._id, tokens.refreshToken);
+            return cb(null, { user: existingUser, tokens });
           } else {
             console.log('Adding new Facebook user to DB..');
             user = new User({
               accountId: profile.id,
               name: profile.displayName,
               provider: 'facebook',
-              email: email
+              email: email,
+              registeredDate: new Date()
             });
             await user.save();
-            console.log('New user added:', user);
+            const tokens = tokenService.generateTokens({ id: user._id, email: user.email });
+            await tokenService.saveToken(user._id, tokens.refreshToken);
+            return cb(null, { user, tokens });
           }
         } else {
           console.log('Facebook User already exists in DB..');
+          const tokens = tokenService.generateTokens({ id: user._id, email: user.email });
+          await tokenService.saveToken(user._id, tokens.refreshToken);
+          return cb(null, { user, tokens });
         }
-        
-        const tokens = tokenService.generateTokens({ userId: user._id });
-        await tokenService.saveToken(user._id, tokens.refreshToken);
-        console.log('Tokens generated and saved:', tokens);
-        
-        const userWithTokens = { ...user.toObject(), accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
-        return cb(null, userWithTokens);
       } catch (err) {
-        console.error('Error during Facebook authentication:', err);
         return cb(err, null);
       }
     }
   )
 );
 
-passport.serializeUser((user, done) => {
-  done(null, user.id);
+passport.serializeUser((data, done) => {
+  done(null, data.user._id);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -75,10 +70,7 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-router.get('/', (req, res, next) => {
-  console.log('Received GET /auth/facebook');
-  next();
-}, passport.authenticate('facebook', { scope: ['email'] }));
+router.get('/', passport.authenticate('facebook', { scope: ['email'] }));
 
 router.get(
   '/callback',
@@ -86,32 +78,11 @@ router.get(
     failureRedirect: '/auth/facebook/error',
   }),
   function (req, res) {
-    const { accessToken, refreshToken } = req.user;
-    console.log('Facebook authentication successful, redirecting to profile page with tokens');
-    res.redirect(`http://localhost:3000/profile?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+    const { user, tokens } = req.user;
+    res.redirect(`${process.env.CLIENT_URL}/profile?accessToken=${tokens.accessToken}`);
   }
 );
 
-router.get('/success', async (req, res) => {
-  const userInfo = {
-    id: req.user.id,
-    displayName: req.user.name,
-    provider: req.user.provider,
-  };
-  res.json({ message: 'Login successful', user: userInfo });
-});
-
 router.get('/error', (req, res) => res.send('Error logging in via Facebook..'));
-
-router.get('/signout', (req, res) => {
-  try {
-    req.session.destroy(function (err) {
-      console.log('session destroyed.');
-    });
-    res.json({ message: 'User signed out' });
-  } catch (err) {
-    res.status(400).send({ message: 'Failed to sign out Facebook user' });
-  }
-});
 
 module.exports = router;

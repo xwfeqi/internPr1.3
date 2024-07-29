@@ -1,35 +1,34 @@
-const FormData = require('form-data');
-const Mailgun = require('mailgun.js');
+const mailgun = require('mailgun.js');
+const formData = require('form-data');
 
 class MailService {
-  constructor() {
-    this.API_KEY = process.env.MAILGUN_API_KEY;
-    this.DOMAIN = process.env.MAILGUN_DOMAIN;
-    this.mailgun = new Mailgun(FormData);
-    this.client = this.mailgun.client({ username: 'api', key: this.API_KEY });
-  }
-
-  async sendActivationMail(to, link) {
-    const messageData = {
-      from: 'smtptest123qwe@gmail.com',
-      to,
-      subject: 'Activation account on ' + process.env.API_URL,
-      text: '',
-      html: `
-        <div>
-          <h1>For activation click on the link below</h1>
-          <a href="${link}">${link}</a>
-        </div>
-      `
-    };
-
-    try {
-      const res = await this.client.messages.create(this.DOMAIN, messageData);
-      console.log(`Activation email sent to ${to}`, res);
-    } catch (error) {
-      console.error('Error sending email:', error);
+    constructor() {
+        if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+            const mg = mailgun.client({
+                key: process.env.MAILGUN_API_KEY,
+                domain: process.env.MAILGUN_DOMAIN,
+                formData: formData
+            });
+            this.mg = mg;
+        } else {
+            console.warn('Mailgun API key or domain not set');
+            this.mg = null;
+        }
     }
-  }
+
+    async sendActivationMail(to, link) {
+        if (!this.mg) {
+            console.warn('Mailgun client not initialized');
+            return;
+        }
+        const data = {
+            from: 'smtptest123qwe@gmail.com',
+            to,
+            subject: 'Account Activation',
+            html: `<h1>Click the link to activate</h1><p><a href="${link}">${link}</a></p>`
+        };
+        await this.mg.messages.create(process.env.MAILGUN_DOMAIN, data);
+    }
 }
 
 module.exports = new MailService();

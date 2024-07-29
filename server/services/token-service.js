@@ -3,27 +3,42 @@ const jwt = require('jsonwebtoken');
 
 class TokenService {
     generateTokens(payload) {
-        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
-        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
-        return {
-            accessToken,
-            refreshToken
-        };
+        try {
+            const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
+            const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+            return {
+                accessToken,
+                refreshToken
+            };
+        } catch (err) {
+            console.error('Error generating tokens:', err);
+            throw err;
+        }
     }
 
     async saveToken(userId, refreshToken) {
-        const tokenData = await Token.findOne({ user: userId });
-        if (tokenData) {
-            tokenData.refreshToken = refreshToken;
-            return tokenData.save();
+        try {
+            const tokenData = await Token.findOne({ user: userId });
+            if (tokenData) {
+                tokenData.refreshToken = refreshToken;
+                return tokenData.save();
+            }
+            const token = await Token.create({ user: userId, refreshToken });
+            return token;
+        } catch (err) {
+            console.error('Error saving token:', err);
+            throw err;
         }
-        const token = await Token.create({ user: userId, refreshToken });
-        return token;
     }
 
     async removeToken(refreshToken) {
-        const tokenData = await Token.deleteOne({ refreshToken });
-        return tokenData;
+        try {
+            const tokenData = await Token.deleteOne({ refreshToken });
+            return tokenData;
+        } catch (err) {
+            console.error('Error removing token:', err);
+            throw err;
+        }
     }
 
     validateAccessToken(token) {
@@ -45,8 +60,13 @@ class TokenService {
     }
 
     async findToken(refreshToken) {
-        const tokenData = await Token.findOne({ refreshToken });
-        return tokenData;
+        try {
+            const tokenData = await Token.findOne({ refreshToken });
+            return tokenData;
+        } catch (err) {
+            console.error('Error finding token:', err);
+            throw err;
+        }
     }
 }
 

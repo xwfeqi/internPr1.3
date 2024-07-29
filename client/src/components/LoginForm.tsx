@@ -1,30 +1,20 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
+import AuthService from '../services/AuthService';
 
 const LoginForm: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
-    const store = useUser();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await store.login(email, password);
-            if (store.user?.isActivated) {
-                navigate('/profile');
-            } else {
-                navigate('/activation-page');
-            }
+            await AuthService.login(email, password);
+            navigate('/profile');
         } catch (error) {
-            if (error instanceof Error) {
-                setErrorMessage(error.message);
-            } else {
-                setErrorMessage('An unknown error occurred');
-            }
+            console.error('Error during login:', error);
         }
     };
 
@@ -38,13 +28,11 @@ const LoginForm: React.FC = () => {
                 <Col md="6" lg="4">
                     <Card className="p-4">
                         <h2 className="text-center">Login</h2>
-                        {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
                         <Form onSubmit={handleSubmit}>
                             <Form.Group controlId="formEmail">
                                 <Form.Label>Email address</Form.Label>
                                 <Form.Control
                                     type="email"
-                                    name="email"
                                     placeholder="Enter email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -55,7 +43,6 @@ const LoginForm: React.FC = () => {
                                 <Form.Label>Password</Form.Label>
                                 <Form.Control
                                     type="password"
-                                    name="password"
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -65,13 +52,18 @@ const LoginForm: React.FC = () => {
                             <Button variant="primary" type="submit" className="w-100 mt-3">
                                 Login
                             </Button>
+                            <Button
+                                variant="primary"
+                                type="button"
+                                className="w-100 mt-3"
+                                onClick={handleFacebookLogin}
+                            >
+                                Login with Facebook
+                            </Button>
                         </Form>
-                        <Button variant="primary" className="w-100 mt-3" onClick={handleFacebookLogin}>
-                            Login with Facebook
-                        </Button>
-                        <p className="text-center mt-3">
-                            Don't have an account? <Link to="/register">Register</Link>
-                        </p>    
+                        <div className="text-center mt-3">
+                            Don't have an account? <a href="/register">Register</a>
+                        </div>
                     </Card>
                 </Col>
             </Row>
@@ -80,3 +72,4 @@ const LoginForm: React.FC = () => {
 };
 
 export default LoginForm;
+    

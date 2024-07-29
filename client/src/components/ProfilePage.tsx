@@ -1,28 +1,42 @@
-import React, { useEffect } from 'react';
-import { useUser } from '../context/UserContext';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const ProfilePage: React.FC = () => {
-    const store = useUser();
-    const navigate = useNavigate();
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuthAndFetchProfile = async () => {
-            if (!store.isAuth) {
-                await store.setTokensFromURL();
-                if (!store.isAuth) {
-                    navigate('/login');
-                }
-            } else {
-                await store.fetchUserProfile();
+        const fetchProfile = async () => {
+            const accessToken = new URLSearchParams(window.location.search).get('accessToken');
+            if (!accessToken) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const response = await axios.get('http://localhost:5000/api/profile', {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+                setUser(response.data);
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+            } finally {
+                setLoading(false);
             }
         };
-        checkAuthAndFetchProfile();
-    }, [store, navigate]);
 
-    if (!store.user) {
+        fetchProfile();
+    }, []);
+
+    if (loading) {
         return <div>Loading...</div>;
+    }
+
+    if (!user) {
+        return <div>User not found</div>;
     }
 
     return (
@@ -32,14 +46,10 @@ const ProfilePage: React.FC = () => {
                     <Card className="p-4">
                         <h2 className="text-center">Profile</h2>
                         <Card.Body>
-                            <Card.Text><strong>Name:</strong> {store.user.name}</Card.Text>
-                            <Card.Text><strong>Email:</strong> {store.user.email}</Card.Text>
-                            {store.user.registeredDate && (
-                                <Card.Text><strong>Registered Date:</strong> {new Date(store.user.registeredDate).toLocaleDateString()}</Card.Text>
-                            )}
-                            {store.user.studyDate && (
-                                <Card.Text><strong>Study Date:</strong> {new Date(store.user.studyDate).toLocaleDateString()}</Card.Text>
-                            )}
+                            <Card.Text><strong>Name:</strong> {user.name}</Card.Text>
+                            <Card.Text><strong>Email:</strong> {user.email}</Card.Text>
+                            <Card.Text><strong>Registered Date:</strong> {new Date(user.registeredDate).toLocaleDateString()}</Card.Text>
+                            <Card.Text><strong>Study Date:</strong> {new Date(user.studyDate).toLocaleDateString()}</Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>

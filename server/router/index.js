@@ -3,12 +3,12 @@ const userController = require('../controllers/user-controller');
 const router = new Router();
 const { body } = require('express-validator');
 const authMiddleware = require('../middlewares/auth-middleware');
-const facebookAuth = require('./facebook-auth'); // Додано
+const facebookAuth = require('./facebook-auth');
 
 router.use('/auth/facebook', (req, res, next) => {
   console.log('Received request to /auth/facebook');
   next();
-}, facebookAuth); // Додано
+}, facebookAuth);
 
 router.post('/registration',
     body('email').isEmail(),

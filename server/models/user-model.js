@@ -6,8 +6,9 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: function() { return !this.provider; } },
     isActivated: { type: Boolean, default: false },
     activationLink: { type: String },
-    accountId: { type: String, unique: true, sparse: true },  // Додано для Facebook
-    provider: { type: String }  // Додано для Facebook
+    accountId: { type: String, unique: true, sparse: true },
+    provider: { type: String },
+    registeredDate: { type: Date, default: Date.now }  
 });
 
 module.exports = mongoose.model('User', userSchema);
