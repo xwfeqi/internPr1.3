@@ -72,6 +72,7 @@ const RegisterForm: React.FC = () => {
                         <p className="text-center mt-3">
                             Already have an account? <Link to="/login">Login</Link>
                         </p>
+                        
                     </Card>
                 </Col>
             </Row>

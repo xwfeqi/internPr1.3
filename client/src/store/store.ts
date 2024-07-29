@@ -1,16 +1,15 @@
 import { IUser } from "../models/IUser";
 import { makeAutoObservable } from "mobx";
 import AuthService from "../services/AuthService";
-import UserService from "../services/UserService";
 import axios from 'axios';
 import { AuthResponse } from "../models/response/AuthResponse";
 import { API_URL } from "../http";
+import { runInAction } from "mobx";
 
 export default class Store {
     user = {} as IUser;
     isAuth = false;
     isLoading = false;
-    isActivated = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -22,7 +21,6 @@ export default class Store {
 
     setUser(user: IUser) {
         this.user = user;
-        this.isActivated = user.isActivated;
     }
 
     setLoading(bool: boolean) {
@@ -31,15 +29,15 @@ export default class Store {
 
     async login(email: string, password: string) {
         try {
-            const response = await UserService.login(email, password);
+            const response = await AuthService.login(email, password);
             localStorage.setItem('token', response.data.accessToken);
             this.setAuth(true);
             this.setUser(response.data.user);
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(error.message);
+        } catch (e) {
+            if (e instanceof Error) {
+                console.log((e as any).response?.data?.message);
             } else {
-                throw new Error('An unknown error occurred');
+                console.log("An unknown error occurred");
             }
         }
     }
@@ -50,11 +48,11 @@ export default class Store {
             localStorage.setItem('token', response.data.accessToken);
             this.setAuth(true);
             this.setUser(response.data.user);
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(error.message);
+        } catch (e) {
+            if (e instanceof Error) {
+                console.log((e as any).response?.data?.message);
             } else {
-                throw new Error('An unknown error occurred');
+                console.log("An unknown error occurred");
             }
         }
     }
@@ -65,11 +63,11 @@ export default class Store {
             localStorage.removeItem('token');
             this.setAuth(false);
             this.setUser({} as IUser);
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(error.message);
+        } catch (e) {
+            if (e instanceof Error) {
+                console.log((e as any).response?.data?.message);
             } else {
-                throw new Error('An unknown error occurred');
+                console.log("An unknown error occurred");
             }
         }
     }
@@ -81,14 +79,50 @@ export default class Store {
             localStorage.setItem('token', response.data.accessToken);
             this.setAuth(true);
             this.setUser(response.data.user);
-        } catch (error) {
-            if (error instanceof Error) {
-                console.log(error.message);
+        } catch (e) {
+            if (e instanceof Error) {
+                console.log((e as any).response?.data?.message);
             } else {
-                console.log('An unknown error occurred');
+                console.log("An unknown error occurred");
             }
         } finally {
             this.setLoading(false);
+        }
+    }
+
+    async fetchUserProfile() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token not found');
+            }
+    
+            const response = await axios.get<IUser>(`${API_URL}/profile`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            runInAction(() => {
+                this.setUser(response.data);
+            });
+        } catch (e) {
+            if (e instanceof Error) {
+                console.log((e as any).response?.data?.message);
+            } else {
+                console.log("An unknown error occurred");
+            }
+        }
+    }
+
+    async setTokensFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessToken = urlParams.get('accessToken');
+        const refreshToken = urlParams.get('refreshToken');
+
+        if (accessToken && refreshToken) {
+            localStorage.setItem('token', accessToken);
+            this.setAuth(true);
+            await this.fetchUserProfile();
         }
     }
 }

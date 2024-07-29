@@ -28,6 +28,10 @@ const LoginForm: React.FC = () => {
         }
     };
 
+    const handleFacebookLogin = () => {
+        window.location.href = 'http://localhost:5000/auth/facebook';
+    };
+
     return (
         <Container className="d-flex align-items-center justify-content-center min-vh-100">
             <Row className="w-100 justify-content-center">
@@ -62,9 +66,12 @@ const LoginForm: React.FC = () => {
                                 Login
                             </Button>
                         </Form>
+                        <Button variant="primary" className="w-100 mt-3" onClick={handleFacebookLogin}>
+                            Login with Facebook
+                        </Button>
                         <p className="text-center mt-3">
                             Don't have an account? <Link to="/register">Register</Link>
-                        </p>
+                        </p>    
                     </Card>
                 </Col>
             </Row>
