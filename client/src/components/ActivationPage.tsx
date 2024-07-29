@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Alert, Card } from 'react-bootstrap';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Alert, Card, Button } from 'react-bootstrap';
 import UserService from '../services/UserService';
 
 const ActivationPage: React.FC = () => {
@@ -27,6 +27,7 @@ const ActivationPage: React.FC = () => {
             setMessage('Activation link is missing');
         }
     }, [link, location.state]);
+
 
     return (
         <Container className="d-flex align-items-center justify-content-center min-vh-100">

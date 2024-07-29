@@ -24,6 +24,9 @@ class UserController {
             const hashPassword = await bcrypt.hash(password, 3);
             const user = await User.create({ email, password: hashPassword, name });
             const activationLink = jwt.sign({ userId: user._id }, process.env.JWT_ACCESS_SECRET, { expiresIn: '1d' });
+    
+            user.activationLink = activationLink;
+            await user.save();
 
             if (mailService.mg) {
                 await mailService.sendActivationMail(email, `${process.env.API_URL}/api/activate/${activationLink}`);
@@ -34,6 +37,7 @@ class UserController {
             next(e);
         }
     }
+
 
     async login(req, res, next) {
         try {
@@ -78,15 +82,15 @@ class UserController {
             const { link } = req.params;
             const decoded = jwt.verify(link, process.env.JWT_ACCESS_SECRET);
             const user = await User.findById(decoded.userId);
-
+    
             if (!user) {
                 return next(ApiError.BadRequest('User not found'));
             }
-
+    
             user.isActivated = true;
             await user.save();
-
-            return res.json({ message: 'Account activated' });
+    
+            return res.redirect(`${process.env.CLIENT_URL}/login`);
         } catch (e) {
             next(e);
         }
@@ -94,7 +98,7 @@ class UserController {
 
     async refresh(req, res, next) {
         try {
-            const { refreshToken } = req.cookies;
+            const { refreshToken } = req.body;
             if (!refreshToken) {
                 return next(ApiError.UnauthorizedError());
             }
@@ -117,15 +121,19 @@ class UserController {
 
     async getProfile(req, res, next) {
         try {
-          const user = await User.findById(req.user.id);
-          if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-          }
-          res.json(user);
+            console.log('Received user ID from token:', req.user.userId);
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                console.log('User not found in DB with ID:', req.user.userId);
+                return res.status(404).json({ message: 'User not found' });
+            }
+            console.log('User found:', user);
+            res.json(user);
         } catch (e) {
-          next(e);
+            console.log('Error fetching user:', e);
+            next(e);
         }
-      }
+    }
 
     async getAllUsers(req, res, next) {
         try {
@@ -133,6 +141,22 @@ class UserController {
             return res.json(users);
         } catch (e) {
             next(e);
+        }
+    }
+
+    async setStudyDate(req, res, next) {
+        try {
+            const { studyDate } = req.body;
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            user.studyDate = studyDate;
+            await user.save();
+            res.json(user);
+        } catch (err) {
+            res.status(500).json({ message: 'Server error' });
         }
     }
 }

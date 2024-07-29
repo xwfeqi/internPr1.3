@@ -21,5 +21,7 @@ router.get('/activate/:link', userController.activate);
 router.get('/refresh', userController.refresh);
 router.get('/profile', authMiddleware, userController.getProfile); 
 router.get('/users', authMiddleware, userController.getAllUsers);
+router.post('/set-study-date', authMiddleware, userController.setStudyDate);
 
 module.exports = router;
+  

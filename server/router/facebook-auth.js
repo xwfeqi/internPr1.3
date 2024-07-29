@@ -27,7 +27,7 @@ passport.use(
             existingUser.accountId = profile.id;
             existingUser.provider = 'facebook';
             await existingUser.save();
-            const tokens = tokenService.generateTokens({ id: existingUser._id, email: existingUser.email });
+            const tokens = tokenService.generateTokens({ userId: existingUser._id, email: existingUser.email });
             await tokenService.saveToken(existingUser._id, tokens.refreshToken);
             return cb(null, { user: existingUser, tokens });
           } else {
@@ -40,13 +40,13 @@ passport.use(
               registeredDate: new Date()
             });
             await user.save();
-            const tokens = tokenService.generateTokens({ id: user._id, email: user.email });
+            const tokens = tokenService.generateTokens({ userId: user._id, email: user.email });
             await tokenService.saveToken(user._id, tokens.refreshToken);
             return cb(null, { user, tokens });
           }
         } else {
           console.log('Facebook User already exists in DB..');
-          const tokens = tokenService.generateTokens({ id: user._id, email: user.email });
+          const tokens = tokenService.generateTokens({ userId: user._id, email: user.email });
           await tokenService.saveToken(user._id, tokens.refreshToken);
           return cb(null, { user, tokens });
         }
@@ -79,7 +79,7 @@ router.get(
   }),
   function (req, res) {
     const { user, tokens } = req.user;
-    res.redirect(`${process.env.CLIENT_URL}/profile?accessToken=${tokens.accessToken}`);
+    res.redirect(`${process.env.CLIENT_URL}/profile?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`);
   }
 );
 

@@ -7,8 +7,9 @@ const userSchema = new mongoose.Schema({
     isActivated: { type: Boolean, default: false },
     activationLink: { type: String },
     accountId: { type: String, unique: true, sparse: true },
-    provider: { type: String },
-    registeredDate: { type: Date, default: Date.now }  
+    provider: { type: String, default: "email" },
+    registeredDate: { type: Date, default: Date.now },
+    studyDate: { type: Date }  
 });
 
 module.exports = mongoose.model('User', userSchema);

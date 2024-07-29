@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import { Form, Button, Container, Row, Col, Card, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import AuthService from '../services/AuthService';
 
 const RegisterForm: React.FC = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
     const [errorMessage, setErrorMessage] = useState('');
-    const store = useUser();
     const navigate = useNavigate();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,14 +15,10 @@ const RegisterForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await store.register(formData.name, formData.email, formData.password);
+            await AuthService.registration(formData.name, formData.email, formData.password);
             navigate('/activation-page', { state: { newUser: true } });
-        } catch (error) {
-            if (error instanceof Error) {
-                setErrorMessage(error.message);
-            } else {
-                setErrorMessage('An unknown error occurred');
-            }
+        } catch (error: any) {
+            setErrorMessage(error.response?.data?.message || 'An unknown error occurred');
         }
     };
 
@@ -70,9 +65,8 @@ const RegisterForm: React.FC = () => {
                             </Button>
                         </Form>
                         <p className="text-center mt-3">
-                            Already have an account? <Link to="/login">Login</Link>
+                            Already have an account? <a href="/login">Login</a>
                         </p>
-                        
                     </Card>
                 </Col>
             </Row>
