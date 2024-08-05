@@ -23,6 +23,7 @@
     "mailgun.js": "^10.2.3",
     "mongodb": "^3.6.8",
     "mongoose": "^5.12.11",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.9.14",
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",

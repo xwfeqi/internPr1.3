@@ -33,10 +33,10 @@ passport.use(
           } else {
             console.log('Adding new Facebook user to DB..');
             user = new User({
-              accountId: profile.id,
               name: profile.displayName,
-              provider: 'facebook',
               email: email,
+              accountId: profile.id,
+              provider: 'facebook',
               registeredDate: new Date()
             });
             await user.save();

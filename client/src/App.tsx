@@ -6,6 +6,7 @@ import ProfilePage from './components/ProfilePage';
 import ActivationPage from './components/ActivationPage';
 import SelectStudyDate from './components/SelectStudyDate';
 import { UserProvider } from './context/UserContext';
+import AdminPanel from './components/AdminPanel';
 
 function App() {
     return (
@@ -17,7 +18,8 @@ function App() {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/activation-page" element={<ActivationPage />} />
                     <Route path="/select-study-date" element={<SelectStudyDate />} />
-                    <Route path="*" element={<Navigate to="/login" />} />
+                    <Route path="/admin/students" element={<AdminPanel />} />
+                    <Route path="*" element={<Navigate to="login" />} />
                 </Routes>
             </Router>
         </UserProvider>

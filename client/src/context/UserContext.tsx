@@ -1,8 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { observer } from 'mobx-react-lite';
-import Store from '../store/store';
-
-const store = new Store();
+import Store from '../store/store'; // Імпортуємо ваш клас Store
 
 interface UserContextProps {
     store: Store;
@@ -11,6 +8,7 @@ interface UserContextProps {
 const UserContext = createContext<UserContextProps | null>(null);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const store = new Store();
     return (
         <UserContext.Provider value={{ store }}>
             {children}

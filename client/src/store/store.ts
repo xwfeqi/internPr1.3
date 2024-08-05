@@ -76,7 +76,8 @@ export default class Store {
         this.setLoading(true);
         try {
             const response = await axios.get<AuthResponse>(`${API_URL}/refresh`, { withCredentials: true });
-            localStorage.setItem('token', response.data.accessToken);
+            localStorage.setItem('accessToken', response.data.accessToken);
+            localStorage.setItem('refreshToken', response.data.refreshToken);
             this.setAuth(true);
             this.setUser(response.data.user);
         } catch (e) {
@@ -111,6 +112,23 @@ export default class Store {
             } else {
                 console.log("An unknown error occurred");
             }
+        }
+    }
+    
+    async refreshTokens() {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+            this.logout();
+            return;
+        }
+    
+        try {
+            const response = await axios.post<AuthResponse>(`${API_URL}/refresh`, { token: refreshToken });
+            localStorage.setItem('accessToken', response.data.accessToken);
+            this.setAuth(true);
+            this.setUser(response.data.user);
+        } catch (e) {
+            this.logout();
         }
     }
 

@@ -5,6 +5,7 @@ const mailService = require('../services/mail-service');
 const tokenService = require('../services/token-service');
 const { validationResult } = require('express-validator');
 const ApiError = require('../exceptions/api-error');
+const reminderService = require('../services/reminder-service')
 
 class UserController {
     async registration(req, res, next) {
@@ -151,9 +152,17 @@ class UserController {
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
-
+    
             user.studyDate = studyDate;
             await user.save();
+    
+            try {
+                await reminderService.sendReminderEmail(user.email, studyDate);
+                console.log(`Reminder email sent to ${user.email} for study date ${studyDate}`);
+            } catch (emailError) {
+                console.error('Failed to send reminder email:', emailError);
+            }
+    
             res.json(user);
         } catch (err) {
             next(err);

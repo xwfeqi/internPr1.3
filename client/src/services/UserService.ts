@@ -50,12 +50,35 @@ class UserService {
 
     private handleError(error: unknown): never {
         if (axios.isAxiosError(error) && error.response) {
+            if (error.response.status === 401) {
+                throw new Error('Unauthorized - please login again');
+            }
             throw new Error(error.response.data.message || 'An error occurred');
         } else {
             throw new Error('An unknown error occurred');
         }
     }
+    async getAllUsers(page: number, limit: number) {
+        try {
+            const response = await axios.get(`${API_URL}/users`, {
+                params: { page, limit },
+                withCredentials: true,
+            });
+            return response;
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
+    async refreshToken() {
+        try {
+            const response = await axios.post<AuthResponse>(`${API_URL}/refresh`, {}, { withCredentials: true });
+            return response;
+        } catch (error) {
+            this.handleError(error);
+        }
+    }
 }
+
 
 const userServiceInstance = new UserService();
 export default userServiceInstance;

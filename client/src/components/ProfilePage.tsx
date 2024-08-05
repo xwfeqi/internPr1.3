@@ -29,8 +29,7 @@ const ProfilePage: React.FC = () => {
                 return;
             }
 
-            try {
-                console.log('Fetching profile with accessToken:', accessToken);
+            try {   
                 const response = await axios.get('http://localhost:5000/api/profile', {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
@@ -42,7 +41,7 @@ const ProfilePage: React.FC = () => {
                 if (error.response && error.response.status === 401) {
                     try {
                         console.log('Refreshing token with refreshToken:', refreshToken);
-                        const refreshResponse = await axios.post('http://localhost:5000/api/refresh-token', {
+                        const refreshResponse = await axios.post('http://localhost:5000/api/refresh', {
                             refreshToken
                         });
                         const { accessToken: newAccessToken } = refreshResponse.data;

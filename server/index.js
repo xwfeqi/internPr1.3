@@ -7,8 +7,7 @@ const mongoose = require('mongoose');
 const router = require('./router/index');
 const facebookAuthRouter = require('./router/facebook-auth');
 const errorMiddleware = require('./middlewares/error-middleware');
-
-
+const ReminderService = require('./services/reminder-service');
 const app = express();
 
 app.use(express.json());

@@ -4,5 +4,7 @@ export interface IUser {
     email: string;
     isActivated: boolean;
     registeredDate: string;
+    activationLink?: string;
     studyDate: string; 
+    role?: string;
 }

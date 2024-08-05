@@ -28,6 +28,22 @@ class MailService {
         };
         await this.mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
     }
+
+    async sendReminderEmail(name, email, daysBefore) {
+        console.log('Sending reminder email to:', email);
+        const messageData = {
+            from: 'smtptest123qwe@gmail.com',
+            to: email,
+            subject: `Reminder: Your study starts in ${daysBefore} days`,
+            html: `
+                <h2>Hello, ${name}!</h2>
+                <p>This is a reminder that your study starts in ${daysBefore} days.</p>
+                <p>Please make sure to be prepared.</p>
+                <p>Best regards,<br/>Your Service Team</p>
+            `
+        };
+        await this.mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
+    }
 }
 
 module.exports = new MailService();

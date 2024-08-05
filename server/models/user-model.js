@@ -9,7 +9,9 @@ const userSchema = new mongoose.Schema({
     accountId: { type: String, unique: true, sparse: true },
     provider: { type: String, default: "email" },
     registeredDate: { type: Date, default: Date.now },
-    studyDate: { type: Date }  
+    studyDate: { type: Date },
+    remindersSent: { type: [Number], default: [] },
+    role: { type: String, enum: ['student', 'admin'], default: 'student' },
 });
 
 module.exports = mongoose.model('User', userSchema);
