@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import Store from '../store/store'; // Імпортуємо ваш клас Store
+import Store from '../store/store';
 
 interface UserContextProps {
     store: Store;

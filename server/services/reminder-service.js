@@ -27,7 +27,6 @@ class ReminderService {
             1: new Date(currentDate.setDate(currentDate.getDate() + 1)).toISOString().split('T')[0],
         };
 
-        // Перевіряємо кожний інтервал: 30 днів, 7 днів, 1 день
         for (const [daysBefore, targetDate] of Object.entries(daysBeforeMapping)) {
             const users = await User.find({ studyDate: targetDate });
             users.forEach(async (user) => {
