@@ -8,6 +8,7 @@ const router = require('./router/index');
 const facebookAuthRouter = require('./router/facebook-auth');
 const errorMiddleware = require('./middlewares/error-middleware');
 const ReminderService = require('./services/reminder-service');
+const courseRoutes = require('./router/index');
 const app = express();
 
 app.use(express.json());
@@ -24,6 +25,7 @@ app.use(cors({
 app.use('/api', router);
 app.use('/auth/facebook', facebookAuthRouter);
 app.use(errorMiddleware);
+app.use('/api/courses', courseRoutes)
 
 const PORT = process.env.PORT || 5000;
 

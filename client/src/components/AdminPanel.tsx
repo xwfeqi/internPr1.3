@@ -58,7 +58,6 @@ const AdminPanel: React.FC = () => {
                         <th onClick={() => handleSort('name')}>Name</th>
                         <th onClick={() => handleSort('email')}>Email</th>
                         <th onClick={() => handleSort('registeredDate')}>Registered Date</th>
-                        <th onClick={() => handleSort('studyDate')}>Study Date</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,7 +67,6 @@ const AdminPanel: React.FC = () => {
                             <td>{student.name}</td>
                             <td>{student.email}</td>
                             <td>{new Date(student.registeredDate).toLocaleDateString()}</td>
-                            <td>{new Date(student.studyDate).toLocaleDateString()}</td>
                         </tr>
                     ))}
                 </tbody>

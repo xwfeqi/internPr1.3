@@ -6,6 +6,7 @@ const tokenService = require('../services/token-service');
 const { validationResult } = require('express-validator');
 const ApiError = require('../exceptions/api-error');
 const reminderService = require('../services/reminder-service')
+const Course = require('../models/course-model');
 
 class UserController {
     async registration(req, res, next) {
@@ -148,24 +149,91 @@ class UserController {
     async setStudyDate(req, res, next) {
         try {
             const { studyDate } = req.body;
-            const user = await User.findById(req.user.userId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+            const courseId = req.params.id;
+            const userId = req.user.userId;
+    
+            if (!courseId) {
+                return res.status(400).json({ message: 'Course ID is required' });
             }
     
-            user.studyDate = studyDate;
-            await user.save();
+            console.log('Received studyDate:', studyDate);
+            console.log('Received courseId:', courseId);
+            console.log('Received userId from token:', userId);
+    
+            const course = await Course.findById(courseId);
+    
+            if (!course) {
+                return res.status(404).json({ message: 'Course not found' });
+            }
+            const existingEntry = course.studyDates.find(entry => entry.userId.toString() === userId);
+    
+            if (existingEntry) {
+                existingEntry.studyDate = studyDate;
+            } else {
+                course.studyDates.push({ userId, studyDate });
+            }
+    
+            await course.save();
     
             try {
+                const user = await User.findById(userId);
                 await reminderService.sendReminderEmail(user.email, studyDate);
                 console.log(`Reminder email sent to ${user.email} for study date ${studyDate}`);
             } catch (emailError) {
                 console.error('Failed to send reminder email:', emailError);
             }
     
-            res.json(user);
+            res.json(course);
         } catch (err) {
+            console.error('Error saving study date:', err);
             next(err);
+        }
+    }
+    
+
+    async getCourses(req, res, next) {
+        try {
+            const courses = await Course.find();
+            res.json(courses);
+        } catch (e) {
+            console.error('Error fetching courses:', e);
+            next(e);
+        }
+    }
+
+    async getCourseById (req, res, next) {
+        try {
+            const course = await Course.findById(req.params.id);
+            if (!course) {
+                return res.status(404).json({ message: 'Course not found' });
+            }
+            res.json(course);
+        } catch (e) {
+            console.error('Error fetching course:', e);
+            next(e);
+        }
+    };
+    async signUpForCourse(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { studyDate } = req.body;
+
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            const course = await Course.findById(id);
+            if (!course) {
+                return res.status(404).json({ message: 'Course not found' });
+            }
+
+            user.studyDate = studyDate;
+            await user.save();
+
+            res.json({ message: 'Signed up successfully', course });
+        } catch (e) {
+            console.error('Error signing up for course:', e);
+            next(e);
         }
     }
 }

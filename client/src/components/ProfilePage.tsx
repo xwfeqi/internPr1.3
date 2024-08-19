@@ -1,49 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Spinner, Badge, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ICourse } from '../models/ICourse';
 
 const ProfilePage: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [course, setCourses] = useState<ICourse[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        let isMounted = true;
-
         const fetchProfile = async () => {
-            let accessToken = localStorage.getItem('accessToken');
-            let refreshToken = localStorage.getItem('refreshToken');
+            const accessToken = localStorage.getItem('accessToken');
+            const refreshToken = localStorage.getItem('refreshToken');
             const urlAccessToken = new URLSearchParams(window.location.search).get('accessToken');
             const urlRefreshToken = new URLSearchParams(window.location.search).get('refreshToken');
 
             if (urlAccessToken && urlRefreshToken) {
-                accessToken = urlAccessToken;
-                refreshToken = urlRefreshToken;
-                localStorage.setItem('accessToken', accessToken);
-                localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('accessToken', urlAccessToken);
+                localStorage.setItem('refreshToken', urlRefreshToken);
             }
 
             if (!accessToken) {
                 setLoading(false);
+                setError('You are not logged in.');
                 return;
             }
 
-            try {   
+            try {
                 const response = await axios.get('http://localhost:5000/api/profile', {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
                 });
-                if (isMounted) setUser(response.data);
+                setUser(response.data);
             } catch (error: any) {
-                console.error('Error fetching profile:', error);
-                if (error.response && error.response.status === 401) {
+                if (error.response?.status === 401 && refreshToken) {
                     try {
-                        console.log('Refreshing token with refreshToken:', refreshToken);
-                        const refreshResponse = await axios.post('http://localhost:5000/api/refresh', {
-                            refreshToken
-                        });
+                        const refreshResponse = await axios.post('http://localhost:5000/api/refresh', { refreshToken });
                         const { accessToken: newAccessToken } = refreshResponse.data;
                         localStorage.setItem('accessToken', newAccessToken);
 
@@ -52,25 +48,34 @@ const ProfilePage: React.FC = () => {
                                 Authorization: `Bearer ${newAccessToken}`
                             }
                         });
-                        if (isMounted) setUser(retryResponse.data);
-                    } catch (refreshError: any) {
-                        console.error('Error refreshing token:', refreshError);
+                        setUser(retryResponse.data);
+                    } catch (refreshError) {
                         handleLogout();
                     }
                 } else {
-                    console.error('Error fetching profile:', error);
+                    setError('Failed to fetch profile.');
                 }
             } finally {
-                if (isMounted) setLoading(false);
+                setLoading(false);
             }
         };
 
         fetchProfile();
-
-        return () => {
-            isMounted = false;
-        };
     }, [navigate]);
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/api/courses');
+                setCourses(response.data);
+            } catch (err) {
+                console.error('Error fetching courses:', err);
+                setError('Failed to fetch courses.');
+            }
+        };
+
+        fetchCourses();
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
@@ -78,37 +83,85 @@ const ProfilePage: React.FC = () => {
         navigate('/login');
     };
 
+    const CourseCard = ({ course }: { course: ICourse }) => (
+        <Card
+            className="mb-3 shadow-sm"
+            style={{
+                cursor: 'pointer',
+                borderRadius: '15px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onClick={() => navigate(`/courses/${course._id}`)}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+            }}
+        >
+            <Card.Body>
+                <Card.Title style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                    {course.name}
+                </Card.Title>
+                <Card.Text style={{ color: '#555' }}>
+                    Study Date: {course.userStudyDate ? new Date(course.userStudyDate).toLocaleDateString() : 'Not set'}
+                </Card.Text>
+            </Card.Body>
+        </Card>
+    );
+
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+                <Spinner animation="border" variant="primary" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return <Alert variant="danger" className="mt-4 text-center">{error}</Alert>;
     }
 
     if (!user) {
-        return <div>User not found</div>;
+        return <Alert variant="danger" className="mt-4 text-center">User not found</Alert>;
     }
 
     return (
-        <Container className="d-flex align-items-center justify-content-center min-vh-100">
-            <Row className="w-100 justify-content-center">
-                <Col md="8" lg="6">
-                    <Card className="p-4">
-                        <h2 className="text-center">Profile</h2>
+        <Container className="mt-5">
+            <h2 className="mb-4 text-center">Profile</h2>
+            <Row>
+                <Col md={4}>
+                    <Card className="p-4 shadow-sm" style={{ borderRadius: '15px' }}>
+                        <h3 className="text-center mb-3">User Information</h3>
                         <Card.Body>
                             <Card.Text><strong>Name:</strong> {user.name}</Card.Text>
                             <Card.Text><strong>Email:</strong> {user.email}</Card.Text>
                             <Card.Text><strong>Registered Date:</strong> {new Date(user.registeredDate).toLocaleDateString()}</Card.Text>
-                            <Card.Text>
-                                <strong>Study Date:</strong> {user.studyDate ? new Date(user.studyDate).toLocaleDateString() : 'Not set'}
-                                <Button 
-                                    variant="link" 
-                                    onClick={() => navigate('/select-study-date')} 
-                                    className="ml-2"
-                                >
-                                    Select Date
-                                </Button>
-                            </Card.Text>
-                            <Button variant="danger" onClick={handleLogout} className="mt-3">Logout</Button>
+                            <Button variant="danger" onClick={handleLogout} className="mt-3 w-100">
+                                Logout
+                            </Button>
                         </Card.Body>
                     </Card>
+                </Col>
+                <Col md={8}>
+                    <h3 className="mb-4">Active Courses <Badge pill bg="success">{course.filter(course => course.type === 'active').length}</Badge></h3>
+                    <Row>
+                        {course.filter(course => course.type === 'active').map(course => (
+                            <Col key={course._id} md={6}>
+                                <CourseCard course={course} />
+                            </Col>
+                        ))}
+                    </Row>
+                    <Button 
+                        variant="primary" 
+                        onClick={() => navigate('/courses')} 
+                        className="mt-3"
+                        style={{ borderRadius: '15px' }}
+                    >
+                        Go to Courses
+                    </Button>
                 </Col>
             </Row>
         </Container>

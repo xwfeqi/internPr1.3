@@ -8,6 +8,7 @@ const facebookAuth = require('./facebook-auth');
 const reminderService = require('../services/reminder-service'); 
 const adminController = require('../controllers/admin-controller');
 const roleMiddleware = require('../middlewares/role-middleware');
+const { getCourses } = require('../controllers/user-controller');
 
 
 router.use('/auth/facebook', (req, res, next) => {
@@ -27,10 +28,12 @@ router.get('/activate/:link', userController.activate);
 router.post('/refresh', userController.refresh);
 router.get('/profile', authMiddleware, userController.getProfile); 
 router.get('/users', authMiddleware, userController.getAllUsers);
-router.post('/set-study-date', authMiddleware, userController.setStudyDate);
 router.get('/admin/students', authMiddleware, roleMiddleware('admin'), adminController.getStudents);
 router.put('/admin/students/:id', authMiddleware, roleMiddleware('admin'), adminController.updateStudent);
-
+router.get('/courses', userController.getCourses);
+router.get('/courses/:id', userController.getCourseById);
+router.post('/courses/:id/signup', authMiddleware, userController.signUpForCourse);
+router.post('/courses/:id/set-study-date', authMiddleware, userController.setStudyDate);
 
 router.post('/test-send-reminder', async (req, res) => {
   try {
