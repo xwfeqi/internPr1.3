@@ -39,8 +39,8 @@ const CourseListPage: React.FC = () => {
                     {filteredCourses.map(course => (
                         <Col key={course._id} xs={12} md={6} lg={4} className="mb-4">
                             <CourseCard
-                                course={course} // Pass the entire course object as a prop
-                                userId={userId!} // Pass the userId as a prop
+                                course={course}
+                                userId={userId!} 
                             />
                         </Col>
                     ))}

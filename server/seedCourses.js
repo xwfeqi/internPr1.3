@@ -15,13 +15,13 @@ const courses = [
         name: "Introduction to Programming",
         description: "A beginner course on programming fundamentals.",
         type: "active",
-        studyDates: [] // Initially no study dates
+        studyDates: []
     },
     {   
         name: "Data Structures",
         description: "An intermediate course on data structures.",
         type: "active",
-        studyDates: [] // Initially no study dates
+        studyDates: []
     },
 ];
 

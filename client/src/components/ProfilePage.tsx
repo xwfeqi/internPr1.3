@@ -40,7 +40,7 @@ const ProfilePage: React.FC = () => {
                 });
                 setUser(response.data);
                 setUpdatedName(response.data.name);
-                setUpdatedLastName(response.data.lastName || ''); // assuming lastName might be null or undefined initially
+                setUpdatedLastName(response.data.lastName || '');
             } catch (error: any) {
                 if (error.response?.status === 401 && refreshToken) {
                     try {

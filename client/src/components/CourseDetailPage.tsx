@@ -11,7 +11,7 @@ const CourseDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const userId = localStorage.getItem('userId'); // Assuming the user ID is stored in local storage or obtained from a token
+    const userId = localStorage.getItem('userId');
 
     useEffect(() => {
         const fetchCourseDetails = async () => {
@@ -24,7 +24,6 @@ const CourseDetailPage: React.FC = () => {
 
                 setCourse(response.data);
 
-                // Find the user's study date from the studyDates array
                 const userStudyDate = response.data.studyDates.find((entry: any) => entry.userId === userId)?.studyDate || '';
                 setSelectedDate(userStudyDate);
 
@@ -60,7 +59,6 @@ const CourseDetailPage: React.FC = () => {
             );
             alert('Study date saved successfully');
 
-            // Update the course state with the new study date for the user
             setCourse(prevCourse => {
                 if (prevCourse) {
                     const updatedStudyDates = prevCourse.studyDates.map(entry =>

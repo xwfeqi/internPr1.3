@@ -15,7 +15,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, userId }) => {
         navigate(`/courses/${course._id}`);
     };
 
-    // Find the study date for the current user
     const userStudyDate = course.studyDates.find(entry => entry.userId === userId)?.studyDate;
 
     return (
