@@ -146,6 +146,27 @@ class UserController {
         }
     }
 
+    async updateProfile(req, res, next) {
+        try {
+            const { name, lastName } = req.body;
+            const userId = req.user.userId;
+    
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+    
+            user.name = name;
+            user.lastName = lastName;
+            await user.save();
+    
+            res.json({ message: 'Profile updated successfully', user });
+        } catch (error) {
+            next(error);
+        }
+    }
+    
+
     async setStudyDate(req, res, next) {
         try {
             const { studyDate } = req.body;

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const CourseListPage: React.FC = () => {
     const [courses, setCourses] = useState<ICourse[]>([]);
     const navigate = useNavigate();
+    const userId = localStorage.getItem('userId'); // Assume this is where you get the userId
 
     useEffect(() => {
         const fetchCourses = async () => {
@@ -38,11 +39,8 @@ const CourseListPage: React.FC = () => {
                     {filteredCourses.map(course => (
                         <Col key={course._id} xs={12} md={6} lg={4} className="mb-4">
                             <CourseCard
-                                _id={course._id}
-                                name={course.name}
-                                type={course.type}
-                                userStudyDate={course.userStudyDate} // Make sure this is available in the API response
-                                // Ensure nextLecture is also passed if needed
+                                course={course} // Pass the entire course object as a prop
+                                userId={userId!} // Pass the userId as a prop
                             />
                         </Col>
                     ))}

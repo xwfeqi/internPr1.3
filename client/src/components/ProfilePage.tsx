@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button, Spinner, Badge, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Spinner, Badge, Alert, Form } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ICourse } from '../models/ICourse';
@@ -7,8 +7,11 @@ import { ICourse } from '../models/ICourse';
 const ProfilePage: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [course, setCourses] = useState<ICourse[]>([]);
+    const [courses, setCourses] = useState<ICourse[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [updatedName, setUpdatedName] = useState('');
+    const [updatedLastName, setUpdatedLastName] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -32,10 +35,12 @@ const ProfilePage: React.FC = () => {
             try {
                 const response = await axios.get('http://localhost:5000/api/profile', {
                     headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
+                        Authorization: `Bearer ${accessToken}`,
+                    },
                 });
                 setUser(response.data);
+                setUpdatedName(response.data.name);
+                setUpdatedLastName(response.data.lastName || ''); // assuming lastName might be null or undefined initially
             } catch (error: any) {
                 if (error.response?.status === 401 && refreshToken) {
                     try {
@@ -45,8 +50,8 @@ const ProfilePage: React.FC = () => {
 
                         const retryResponse = await axios.get('http://localhost:5000/api/profile', {
                             headers: {
-                                Authorization: `Bearer ${newAccessToken}`
-                            }
+                                Authorization: `Bearer ${newAccessToken}`,
+                            },
                         });
                         setUser(retryResponse.data);
                     } catch (refreshError) {
@@ -66,7 +71,11 @@ const ProfilePage: React.FC = () => {
     useEffect(() => {
         const fetchCourses = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/courses');
+                const response = await axios.get('http://localhost:5000/api/courses', {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+                    },
+                });
                 setCourses(response.data);
             } catch (err) {
                 console.error('Error fetching courses:', err);
@@ -77,40 +86,73 @@ const ProfilePage: React.FC = () => {
         fetchCourses();
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        navigate('/login');
+    const handleLogout = async () => {
+        try {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+                await axios.post('http://localhost:5000/api/logout', { refreshToken });
+            }
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+    
+            document.cookie = 'connect.sid=; Max-Age=0; path=/; domain=localhost';
+            navigate('/login');
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
     };
 
-    const CourseCard = ({ course }: { course: ICourse }) => (
-        <Card
-            className="mb-3 shadow-sm"
-            style={{
-                cursor: 'pointer',
-                borderRadius: '15px',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-            }}
-            onClick={() => navigate(`/courses/${course._id}`)}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
-            }}
-        >
-            <Card.Body>
-                <Card.Title style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    {course.name}
-                </Card.Title>
-                <Card.Text style={{ color: '#555' }}>
-                    Study Date: {course.userStudyDate ? new Date(course.userStudyDate).toLocaleDateString() : 'Not set'}
-                </Card.Text>
-            </Card.Body>
-        </Card>
-    );
+    const handleSave = async () => {
+        try {
+            await axios.put(
+                'http://localhost:5000/api/profile',
+                { name: updatedName, lastName: updatedLastName },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+                    },
+                }
+            );
+            setUser({ ...user, name: updatedName, lastName: updatedLastName });
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setError('Failed to update profile.');
+        }
+    };
+
+    const CourseCard = ({ course }: { course: ICourse }) => {
+        const userStudyDate = course.studyDates.find(entry => entry.userId === user?._id)?.studyDate;
+
+        return (
+            <Card
+                className="mb-3 shadow-sm"
+                style={{
+                    cursor: 'pointer',
+                    borderRadius: '15px',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onClick={() => navigate(`/courses/${course._id}`)}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                }}
+            >
+                <Card.Body>
+                    <Card.Title style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        {course.name}
+                    </Card.Title>
+                    <Card.Text style={{ color: '#555' }}>
+                        Study Date: {userStudyDate ? new Date(userStudyDate).toLocaleDateString() : 'Not set'}
+                    </Card.Text>
+                </Card.Body>
+            </Card>
+        );
+    };
 
     if (loading) {
         return (
@@ -136,19 +178,56 @@ const ProfilePage: React.FC = () => {
                     <Card className="p-4 shadow-sm" style={{ borderRadius: '15px' }}>
                         <h3 className="text-center mb-3">User Information</h3>
                         <Card.Body>
-                            <Card.Text><strong>Name:</strong> {user.name}</Card.Text>
-                            <Card.Text><strong>Email:</strong> {user.email}</Card.Text>
-                            <Card.Text><strong>Registered Date:</strong> {new Date(user.registeredDate).toLocaleDateString()}</Card.Text>
-                            <Button variant="danger" onClick={handleLogout} className="mt-3 w-100">
-                                Logout
-                            </Button>
+                            {isEditing ? (
+                                <>
+                                    <Form.Group>
+                                        <Form.Label>Name</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={updatedName}
+                                            onChange={(e) => setUpdatedName(e.target.value)}
+                                        />
+                                    </Form.Group>
+                                    <Form.Group>
+                                        <Form.Label>Last Name</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={updatedLastName}
+                                            onChange={(e) => setUpdatedLastName(e.target.value)}
+                                        />
+                                    </Form.Group>
+                                    <Button variant="primary" className="mt-3 w-100" onClick={handleSave}>
+                                        Save Changes
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        className="mt-3 w-100"
+                                        onClick={() => setIsEditing(false)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Card.Text><strong>Name:</strong> {user.name}</Card.Text>
+                                    <Card.Text><strong>Last Name:</strong> {user.lastName || 'Not provided'}</Card.Text>
+                                    <Card.Text><strong>Email:</strong> {user.email}</Card.Text>
+                                    <Card.Text><strong>Registered Date:</strong> {new Date(user.registeredDate).toLocaleDateString()}</Card.Text>
+                                    <Button variant="primary" className="mt-3 w-100" onClick={() => setIsEditing(true)}>
+                                        Edit Profile
+                                    </Button>
+                                    <Button variant="danger" onClick={handleLogout} className="mt-3 w-100">
+                                        Logout
+                                    </Button>
+                                </>
+                            )}
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={8}>
-                    <h3 className="mb-4">Active Courses <Badge pill bg="success">{course.filter(course => course.type === 'active').length}</Badge></h3>
+                    <h3 className="mb-4">Active Courses <Badge pill bg="success">{courses.filter(course => course.type === 'active').length}</Badge></h3>
                     <Row>
-                        {course.filter(course => course.type === 'active').map(course => (
+                        {courses.filter(course => course.type === 'active').map(course => (
                             <Col key={course._id} md={6}>
                                 <CourseCard course={course} />
                             </Col>

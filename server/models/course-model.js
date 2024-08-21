@@ -3,12 +3,13 @@ const mongoose = require('mongoose');
 const courseSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
-    type: { type: String, required: true, enum: ['active', 'upcoming', 'finished'] },
-    nextLecture: { type: Date },
+    type: { type: String, enum: ['active', 'upcoming', 'finished'], required: true },
     studyDates: [{
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        studyDate: { type: Date, required: true }
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        studyDate: { type: String }
     }]
 });
 
-module.exports = mongoose.model('Course', courseSchema);
+const Course = mongoose.model('Course', courseSchema);
+module.exports = Course;
+

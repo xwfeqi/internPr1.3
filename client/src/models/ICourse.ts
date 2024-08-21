@@ -1,7 +1,11 @@
 export interface ICourse {
     _id: string; 
     name: string;
+    lastname: string;
     description?: string;
     type: 'active' | 'upcoming' | 'finished';
-    userStudyDate?: string;
+    studyDates: Array<{
+        userId: string;
+        studyDate: string;
+    }>;
 }

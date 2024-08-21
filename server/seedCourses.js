@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Course = require('./models/course-model');
+const Course = require('./models/course-model'); // Ensure this path is correct
 
 mongoose.connect('mongodb+srv://nchiburovskiy:12345@ac-zdvpvlb.p64sz9m.mongodb.net/Cluster0?retryWrites=true&w=majority', {
     useNewUrlParser: true,
@@ -15,20 +15,14 @@ const courses = [
         name: "Introduction to Programming",
         description: "A beginner course on programming fundamentals.",
         type: "active",
-        nextLecture: "2024-09-01T10:00:00Z"
+        studyDates: [] // Initially no study dates
     },
     {   
         name: "Data Structures",
         description: "An intermediate course on data structures.",
         type: "active",
-        nextLecture: "2024-09-10T12:00:00Z"
+        studyDates: [] // Initially no study dates
     },
-    {
-        name: "Machine Learning",
-        description: "An advanced course on machine learning concepts.",
-        type: "upcoming",
-        nextLecture: "2024-10-15T14:00:00Z"
-    }
 ];
 
 Course.insertMany(courses)

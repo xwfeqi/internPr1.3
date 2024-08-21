@@ -11,6 +11,7 @@ const CourseDetailPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const userId = localStorage.getItem('userId'); // Assuming the user ID is stored in local storage or obtained from a token
 
     useEffect(() => {
         const fetchCourseDetails = async () => {
@@ -20,8 +21,13 @@ const CourseDetailPage: React.FC = () => {
                         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
                     },
                 });
+
                 setCourse(response.data);
-                setSelectedDate(response.data.userStudyDate || '');
+
+                // Find the user's study date from the studyDates array
+                const userStudyDate = response.data.studyDates.find((entry: any) => entry.userId === userId)?.studyDate || '';
+                setSelectedDate(userStudyDate);
+
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching course details:', error);
@@ -31,7 +37,7 @@ const CourseDetailPage: React.FC = () => {
         };
 
         fetchCourseDetails();
-    }, [id]);
+    }, [id, userId]);
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedDate(e.target.value);
@@ -44,13 +50,27 @@ const CourseDetailPage: React.FC = () => {
         }
 
         try {
-            await axios.post(`http://localhost:5000/api/courses/${id}/set-study-date`, { studyDate: selectedDate }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-                },
-            });
+            await axios.post(`http://localhost:5000/api/courses/${id}/set-study-date`, 
+                { studyDate: selectedDate }, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+                    },
+                }
+            );
             alert('Study date saved successfully');
-            setCourse(prevCourse => prevCourse ? { ...prevCourse, userStudyDate: selectedDate } : prevCourse);
+
+            // Update the course state with the new study date for the user
+            setCourse(prevCourse => {
+                if (prevCourse) {
+                    const updatedStudyDates = prevCourse.studyDates.map(entry =>
+                        entry.userId === userId ? { ...entry, studyDate: selectedDate } : entry
+                    );
+
+                    return { ...prevCourse, studyDates: updatedStudyDates };
+                }
+                return prevCourse;
+            });
         } catch (error) {
             console.error('Error saving study date:', error);
             setError('Failed to save study date. Please try again.');
@@ -75,8 +95,8 @@ const CourseDetailPage: React.FC = () => {
                 <Card.Body>
                     <Card.Title>{course.name}</Card.Title>
                     <Card.Text>{course.description}</Card.Text>
-                    {course.userStudyDate && (
-                        <Card.Text>Next lecture in: {new Date(course.userStudyDate).toLocaleString()}</Card.Text>
+                    {selectedDate && (
+                        <Card.Text>Your Study Date: {new Date(selectedDate).toLocaleDateString()}</Card.Text>
                     )}
                     <Form.Group controlId="formStudyDate" className="mt-3">
                         <Form.Label>Select your start date:</Form.Label>

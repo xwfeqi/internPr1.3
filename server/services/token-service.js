@@ -5,10 +5,10 @@ class TokenService {
   generateTokens(payload) {
     try {
       const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
-        expiresIn: "15m",
+        expiresIn: "2d",
       });
       const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-        expiresIn: "30d",
+        expiresIn: "5d",
       });
       return {
         accessToken,

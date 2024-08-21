@@ -27,6 +27,7 @@ router.post('/logout', userController.logout);
 router.get('/activate/:link', userController.activate);
 router.post('/refresh', userController.refresh);
 router.get('/profile', authMiddleware, userController.getProfile); 
+router.put('/profile', authMiddleware, userController.updateProfile);
 router.get('/users', authMiddleware, userController.getAllUsers);
 router.get('/admin/students', authMiddleware, roleMiddleware('admin'), adminController.getStudents);
 router.put('/admin/students/:id', authMiddleware, roleMiddleware('admin'), adminController.updateStudent);
