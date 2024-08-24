@@ -171,8 +171,7 @@ const ProfilePage: React.FC = () => {
     }
 
     return (
-        <Container className="mt-5">
-            <h2 className="mb-4 text-center">Profile</h2>
+        <Container className="mt-5 p-5">
             <Row>
                 <Col md={4}>
                     <Card className="p-4 shadow-sm" style={{ borderRadius: '15px' }}>

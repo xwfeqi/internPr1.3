@@ -11,18 +11,12 @@ mongoose.connect('mongodb+srv://nchiburovskiy:12345@ac-zdvpvlb.p64sz9m.mongodb.n
 });
 
 const courses = [
-    {
-        name: "Introduction to Programming",
-        description: "A beginner course on programming fundamentals.",
-        type: "active",
-        studyDates: []
-    },
     {   
-        name: "Data Structures",
-        description: "An intermediate course on data structures.",
+        name: "Cybersecurity",
+        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed.",
         type: "active",
         studyDates: []
-    },
+    }
 ];
 
 Course.insertMany(courses)

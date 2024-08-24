@@ -10,37 +10,31 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, userId }) => {
     const navigate = useNavigate();
+    const userStudyDate = course.studyDates.find(entry => entry.userId === userId)?.studyDate;
 
-    const handleClick = () => {
+    const handleCardClick = () => {
         navigate(`/courses/${course._id}`);
     };
 
-    const userStudyDate = course.studyDates.find(entry => entry.userId === userId)?.studyDate;
-
     return (
         <Card
-            onClick={handleClick}
-            className={`course-card ${course.type}`}
+            onClick={handleCardClick}
+            className="course-card mb-4 shadow-sm"
             style={{
                 cursor: 'pointer',
                 borderRadius: '15px',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                transition: 'transform 0.2s',
+                transition: 'transform 0.2s ease-in-out',
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
             <Card.Body>
-                <Card.Title style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>{course.name}</Card.Title>
-                {userStudyDate ? (
-                    <Card.Text style={{ color: '#555' }}>
-                        Study Date: {new Date(userStudyDate).toLocaleDateString()}
-                    </Card.Text>
-                ) : (
-                    <Card.Text style={{ color: '#555' }}>
-                        Study Date: Not set
-                    </Card.Text>
-                )}
+                <Card.Title style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+                    {course.name}
+                </Card.Title>
+                <Card.Text style={{ color: '#555' }}>
+                    Study Date: {userStudyDate ? new Date(userStudyDate).toLocaleDateString() : 'Not set'}
+                </Card.Text>
             </Card.Body>
         </Card>
     );
