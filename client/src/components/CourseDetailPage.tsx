@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Container, Card, Button, Form, Alert } from 'react-bootstrap';
+import { Container, Card, Button, Form, Row, Col } from 'react-bootstrap';
 import { ICourse } from '../models/ICourse';
 
 const CourseDetailPage: React.FC = () => {
@@ -9,7 +9,7 @@ const CourseDetailPage: React.FC = () => {
     const [course, setCourse] = useState<ICourse | null>(null);
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
 
@@ -27,10 +27,9 @@ const CourseDetailPage: React.FC = () => {
                 const userStudyDate = response.data.studyDates.find((entry: any) => entry.userId === userId)?.studyDate || '';
                 setSelectedDate(userStudyDate);
 
-                setLoading(false);
             } catch (error) {
                 console.error('Error fetching course details:', error);
-                setError('Failed to load course details. Please try again later.');
+            } finally {
                 setLoading(false);
             }
         };
@@ -44,7 +43,7 @@ const CourseDetailPage: React.FC = () => {
 
     const handleSaveDate = async () => {
         if (!selectedDate) {
-            setError('Please select a study date before saving.');
+            console.error('Please select a study date before saving.');
             return;
         }
 
@@ -57,7 +56,6 @@ const CourseDetailPage: React.FC = () => {
                     },
                 }
             );
-            alert('Study date saved successfully');
 
             setCourse(prevCourse => {
                 if (prevCourse) {
@@ -69,9 +67,12 @@ const CourseDetailPage: React.FC = () => {
                 }
                 return prevCourse;
             });
+
+            // Show success message
+            setSuccessMessage('Study date saved successfully');
+            setTimeout(() => setSuccessMessage(null), 3000); // Clear the message after 3 seconds
         } catch (error) {
             console.error('Error saving study date:', error);
-            setError('Failed to save study date. Please try again.');
         }
     };
 
@@ -79,38 +80,51 @@ const CourseDetailPage: React.FC = () => {
         return <div>Loading...</div>;
     }
 
-    if (error) {
-        return <Alert variant="danger">{error}</Alert>;
-    }
-
     if (!course) {
-        return <Alert variant="warning">Course not found</Alert>;
+        return <div>Course not found</div>;
     }
 
     return (
         <Container>
-            <Card className="mt-4">
+            <Card className="mt-4 shadow-lg" style={{ borderRadius: '20px', border: 'none' }}>
                 <Card.Body>
-                    <Card.Title>{course.name}</Card.Title>
-                    <Card.Text>{course.description}</Card.Text>
-                    {selectedDate && (
-                        <Card.Text>Your Study Date: {new Date(selectedDate).toLocaleDateString()}</Card.Text>
-                    )}
-                    <Form.Group controlId="formStudyDate" className="mt-3">
+                    <div className="text-center">
+                        <Card.Title className="display-5 mb-4" style={{ fontWeight: 'bold' }}>{course.name}</Card.Title>
+                        <Card.Text className="text-muted mb-4">{course.description}</Card.Text>
+                    </div>
+                    <hr className="my-4" />
+                    <div className="text-center mb-4">
+                        {selectedDate ? (
+                            <h5>Your Study Date: <strong>{new Date(selectedDate).toLocaleDateString()}</strong></h5>
+                        ) : (
+                            <h5 className="text-muted">No Study Date Set</h5>
+                        )}
+                    </div>
+                    <Form.Group controlId="formStudyDate" className="text-center">
                         <Form.Label>Select your start date:</Form.Label>
                         <Form.Control
                             type="date"
                             value={selectedDate}
                             onChange={handleDateChange}
+                            className="mx-auto"
+                            style={{ maxWidth: '300px' }}
                         />
                     </Form.Group>
-                    {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-                    <Button variant="primary" onClick={handleSaveDate} className="mt-3">
-                        Save Study Date
-                    </Button>
-                    <Button variant="secondary" onClick={() => navigate('/courses')} className="ml-2 mt-3">
-                        Back to Courses
-                    </Button>
+                    {successMessage && (
+                        <div className="text-center mt-3">
+                            <div style={{ backgroundColor: '#d4edda', color: '#155724', padding: '10px', borderRadius: '5px' }}>
+                                {successMessage}
+                            </div>
+                        </div>
+                    )}
+                    <div className="text-center mt-4">
+                        <Button variant="primary" onClick={handleSaveDate} className="px-4">
+                            Save Study Date
+                        </Button>
+                        <Button variant="secondary" onClick={() => navigate('/courses')} className="ml-3 px-4">
+                            Back to Courses
+                        </Button>
+                    </div>
                 </Card.Body>
             </Card>
         </Container>
